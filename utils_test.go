@@ -47,3 +47,43 @@ func TestParseTimeCustom(t *testing.T) {
 		t.Fatal("does not match set time")
 	}
 }
+
+func TestParseCommandEnv(t *testing.T) {
+	command := []string{"ENV=staging", "PATH=$PATH:/opt/bin", "/usr/local/bin/python3", "/opt/app/server.py", "--port", "7000"}
+	cmd, comment := parseCommand(command)
+	if comment != "" {
+		t.Fatal("comment not parsed")
+	}
+	if len(cmd.Env) != 2 ||
+		cmd.Env[0] != "ENV=staging" ||
+		cmd.Env[1] != "PATH=$PATH:/opt/bin" {
+		t.Fatal("env not parsed correctly")
+	}
+	if len(cmd.Args) != 4 ||
+		cmd.Args[0] != "/usr/local/bin/python3" ||
+		cmd.Args[1] != "/opt/app/server.py" ||
+		cmd.Args[2] != "--port" ||
+		cmd.Args[3] != "7000" {
+		t.Fatal("could not parse arguments")
+	}
+}
+
+func TestParseCommandEnvComment(t *testing.T) {
+	command := []string{"ENV=staging", "PATH=$PATH:/opt/bin", "/usr/local/bin/python3", "/opt/app/server.py", "--port", "7000", "#", "run", "server"}
+	cmd, comment := parseCommand(command)
+	if comment != "run server" {
+		t.Fatalf("comment not parsed: %s", comment)
+	}
+	if len(cmd.Env) != 2 ||
+		cmd.Env[0] != "ENV=staging" ||
+		cmd.Env[1] != "PATH=$PATH:/opt/bin" {
+		t.Fatal("env not parsed correctly")
+	}
+	if len(cmd.Args) != 4 ||
+		cmd.Args[0] != "/usr/local/bin/python3" ||
+		cmd.Args[1] != "/opt/app/server.py" ||
+		cmd.Args[2] != "--port" ||
+		cmd.Args[3] != "7000" {
+		t.Fatal("could not parse arguments")
+	}
+}

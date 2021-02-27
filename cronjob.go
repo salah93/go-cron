@@ -25,7 +25,7 @@ func (j *Job) AddItem(i *Item) {
 // RemoveItemsByComment - filter out cron entries by their comment
 func (j *Job) RemoveItemsByComment(comment string) {
 	var items []*Item
-	for _, item := range j.Items[:] {
+	for _, item := range j.Items {
 		if !strings.Contains(item.Comment, comment) {
 			items = append(items, item)
 		}

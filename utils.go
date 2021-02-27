@@ -138,7 +138,7 @@ func parseCommand(cronEntrySplitUp []string) (*exec.Cmd, string) {
 		if env != "" {
 			commandEnv = append(commandEnv, env)
 		} else if strings.HasPrefix(entry, "#") {
-			comment = strings.TrimLeft(strings.Join(cronEntrySplitUp[index:], " ")[1:], " ")
+			comment = strings.TrimSpace(strings.Join(cronEntrySplitUp[index:], " ")[1:])
 			break
 		} else {
 			command = append(command, entry)

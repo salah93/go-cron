@@ -74,7 +74,8 @@ func NewJob() *Job {
 	if err == nil {
 		cronEntriesSplitUp := strings.Split(string(oldCronJobs), "\n")
 		for _, entry := range cronEntriesSplitUp {
-			if EnvPattern.FindString(entry) != "" {
+			envMatch := EnvPattern.FindString(entry)
+			if envMatch != "" && envMatch == entry {
 				job.Env = append(job.Env, entry)
 			} else if strings.HasPrefix(entry, "#") {
 				job.Comments = append(job.Comments, entry)

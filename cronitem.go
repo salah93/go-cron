@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-//MacroPattern pattern to match cron strings
+//MacroPattern pattern to match cron macros
 var MacroPattern = regexp.MustCompile("@(annually|yearly|monthly|weekly|daily|hourly)")
 
 //TimePattern pattern to match time strings
@@ -17,7 +17,22 @@ var TimePattern = regexp.MustCompile("(\\d+|\\*) (\\d+|\\*) (\\d+|\\*) (\\d+|\\*
 //EnvPattern pattern to match environment strings
 var EnvPattern = regexp.MustCompile("(\\w+)=((?:\\w|[$:/])+)")
 
-//  ((\w+=\w+ )*(\w+))")
+//ItemTime - represents the time for a cron entry
+type ItemTime struct {
+	Minute     string
+	Hour       string
+	DayOfMonth string
+	Month      string
+	WeekDay    string
+}
+
+//Item - repesenting cron entry
+type Item struct {
+	Command *exec.Cmd
+	Comment string
+	Time    *ItemTime
+	Raw     string
+}
 
 //NewItem - parse a cron entry
 func NewItem(cronEntry string) *Item {

@@ -42,7 +42,12 @@ func (j *Job) Save() {
 	defer os.Remove(tempfile.Name())
 	defer tempfile.Close()
 
-	tempfile.WriteString(fmt.Sprintf("%s\n", strings.Join(j.Env, "\n")))
+	if j.Env != nil {
+		tempfile.WriteString(fmt.Sprintf("%s\n", strings.Join(j.Env, "\n")))
+	}
+	if j.Comments != nil {
+		tempfile.WriteString(fmt.Sprintf("%s\n", strings.Join(j.Comments, "\n")))
+	}
 	for _, item := range j.Items {
 		if item.Raw != "" {
 			tempfile.WriteString(fmt.Sprintf("%s\n", item.Raw))

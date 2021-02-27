@@ -24,7 +24,7 @@ func NewItem(cronEntry string) *Item {
 	// var item Item
 	// var comment string
 	var itemTime *ItemTime
-	cronEntrySplitUp := strings.Split(cronEntry, " ")
+	cronEntrySplitUp := strings.Fields(cronEntry)
 	if len(cronEntrySplitUp) == 0 {
 		return nil
 	}

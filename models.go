@@ -36,5 +36,6 @@ type Job struct {
 	Items []*Item
 	// Env - environment variables set in cronfile
 	// each entry is of the form key=value
-	Env []string
+	Env      []string
+	Comments []string
 }

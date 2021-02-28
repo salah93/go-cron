@@ -52,20 +52,18 @@ func (j *Job) Save() {
 		if item.Raw != "" {
 			tempfile.WriteString(fmt.Sprintf("%s\n", item.Raw))
 		} else {
+			// time
 			tempfile.WriteString(fmt.Sprintf("%s %s %s %s %s ", item.Time.Minute, item.Time.Hour, item.Time.DayOfMonth, item.Time.Month, item.Time.WeekDay))
+			// env
 			tempfile.WriteString(fmt.Sprintf("%s ", strings.Join(item.Command.Env, " ")))
+			// command
 			tempfile.WriteString(strings.Join(item.Command.Args, " "))
-			stdout := os.DevNull
-			stderr := os.DevNull
-			if item.Command.Stdout != nil {
-				stdout = item.Command.Stdout.(*os.File).Name()
-			}
-			if item.Command.Stderr == item.Command.Stdout {
-				stderr = "&1"
-			} else if item.Command.Stderr != nil {
-				stderr = item.Command.Stderr.(*os.File).Name()
-			}
+
+			// redirect
+			stdout, stderr := getStdOutErrFileNames(item.Command)
 			tempfile.WriteString(fmt.Sprintf(" > %s 2>%s", stdout, stderr))
+
+			// comments
 			if item.Comment != "" {
 				tempfile.WriteString(fmt.Sprintf(" # %s", item.Comment))
 			}
@@ -76,6 +74,26 @@ func (j *Job) Save() {
 
 	cmd := exec.Command(CronCmd, tempfile.Name())
 	err = cmd.Run()
+}
+
+func getStdOutErrFileNames(cmd *exec.Cmd) (string, string) {
+	stdout := os.DevNull
+	stderr := os.DevNull
+	if cmd.Stdout != nil {
+		f, ok := cmd.Stdout.(*os.File)
+		if ok {
+			stdout = f.Name()
+		}
+	}
+	if cmd.Stderr == cmd.Stdout {
+		stderr = "&1"
+	} else if cmd.Stderr != nil {
+		f, ok := cmd.Stderr.(*os.File)
+		if ok {
+			stderr = f.Name()
+		}
+	}
+	return stdout, stderr
 }
 
 //NewJob - get a Job object, grabs user's current cron entries to start

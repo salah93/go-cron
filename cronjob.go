@@ -55,6 +55,17 @@ func (j *Job) Save() {
 			tempfile.WriteString(fmt.Sprintf("%s %s %s %s %s ", item.Time.Minute, item.Time.Hour, item.Time.DayOfMonth, item.Time.Month, item.Time.WeekDay))
 			tempfile.WriteString(fmt.Sprintf("%s ", strings.Join(item.Command.Env, " ")))
 			tempfile.WriteString(strings.Join(item.Command.Args, " "))
+			stdout := os.DevNull
+			stderr := os.DevNull
+			if item.Command.Stdout != nil {
+				stdout = item.Command.Stdout.(*os.File).Name()
+			}
+			if item.Command.Stderr == item.Command.Stdout {
+				stderr = "&1"
+			} else if item.Command.Stderr != nil {
+				stderr = item.Command.Stderr.(*os.File).Name()
+			}
+			tempfile.WriteString(fmt.Sprintf(" > %s 2>%s", stdout, stderr))
 			if item.Comment != "" {
 				tempfile.WriteString(fmt.Sprintf(" # %s", item.Comment))
 			}

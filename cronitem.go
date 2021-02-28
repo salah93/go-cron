@@ -36,89 +36,92 @@ type Item struct {
 
 //NewItem - parse a cron entry
 func NewItem(cronEntry string) *Item {
-	// var item Item
-	// var comment string
+	var item *Item
 	var itemTime *ItemTime
 	cronEntrySplitUp := strings.Fields(cronEntry)
-	if len(cronEntrySplitUp) == 0 {
-		return nil
+	if len(cronEntrySplitUp) > 0 {
+		macro := MacroPattern.FindString(cronEntrySplitUp[0])
+		if macro != "" {
+			itemTime = parseMacro(macro)
+			cronEntrySplitUp = cronEntrySplitUp[1:]
+		} else {
+			timeString := strings.Join(cronEntrySplitUp[:5], " ")
+			itemTime = parseTime(timeString)
+			cronEntrySplitUp = cronEntrySplitUp[5:]
+		}
+		cmd, comment := parseCommand(cronEntrySplitUp)
+		item = &Item{
+			Command: cmd,
+			Time:    itemTime,
+			Comment: comment,
+			Raw:     cronEntry,
+		}
 	}
-	macro := MacroPattern.FindString(cronEntrySplitUp[0])
-	if macro != "" {
-		itemTime = parseMacro(macro)
-		cronEntrySplitUp = cronEntrySplitUp[1:]
-	} else {
-		timeString := strings.Join(cronEntrySplitUp[:5], " ")
-		itemTime = parseTime(timeString)
-		cronEntrySplitUp = cronEntrySplitUp[5:]
-	}
-	cmd, comment := parseCommand(cronEntrySplitUp)
-	return &Item{
-		Command: cmd,
-		Time:    itemTime,
-		Comment: comment,
-		Raw:     cronEntry,
-	}
+	return item
 }
 
 //parseMacro - transforms macro statement to itemtime object
 func parseMacro(macro string) *ItemTime {
+	var itemTime *ItemTime
 	if len(macro) == 0 {
-		return nil
-	} else if macro[0] == '@' {
-		macro = macro[1:]
+		itemTime = nil
+	} else {
+		if macro[0] == '@' {
+			macro = macro[1:]
+		}
+		switch macro {
+		case Annually:
+			fallthrough
+		case Yearly:
+			// 0 0 1 1 *
+			itemTime = &ItemTime{
+				Minute:     "0",
+				Hour:       "0",
+				DayOfMonth: "1",
+				Month:      strconv.Itoa(int(time.January)),
+				WeekDay:    "*",
+			}
+		case Monthly:
+			// 0 0 1 * *
+			itemTime = &ItemTime{
+				Minute:     "0",
+				Hour:       "0",
+				DayOfMonth: "1",
+				Month:      "*",
+				WeekDay:    "*",
+			}
+		case Weekly:
+			// 0 0 * * 0
+			itemTime = &ItemTime{
+				Minute:     "0",
+				Hour:       "0",
+				DayOfMonth: "*",
+				Month:      "*",
+				WeekDay:    strconv.Itoa(int(time.Sunday)),
+			}
+		case Daily:
+			// 0 0 * * *
+			itemTime = &ItemTime{
+				Minute:     "0",
+				Hour:       "0",
+				DayOfMonth: "*",
+				Month:      "*",
+				WeekDay:    "*",
+			}
+		case Hourly:
+			// 0 * * * *
+			itemTime = &ItemTime{
+				Minute:     "0",
+				Hour:       "*",
+				DayOfMonth: "*",
+				Month:      "*",
+				WeekDay:    "*",
+			}
+		default:
+			itemTime = nil
+		}
 	}
-	switch macro {
-	case Annually:
-		fallthrough
-	case Yearly:
-		// 0 0 1 1 *
-		return &ItemTime{
-			Minute:     "0",
-			Hour:       "0",
-			DayOfMonth: "1",
-			Month:      strconv.Itoa(int(time.January)),
-			WeekDay:    "*",
-		}
-	case Monthly:
-		// 0 0 1 * *
-		return &ItemTime{
-			Minute:     "0",
-			Hour:       "0",
-			DayOfMonth: "1",
-			Month:      "*",
-			WeekDay:    "*",
-		}
-	case Weekly:
-		// 0 0 * * 0
-		return &ItemTime{
-			Minute:     "0",
-			Hour:       "0",
-			DayOfMonth: "*",
-			Month:      "*",
-			WeekDay:    strconv.Itoa(int(time.Sunday)),
-		}
-	case Daily:
-		// 0 0 * * *
-		return &ItemTime{
-			Minute:     "0",
-			Hour:       "0",
-			DayOfMonth: "*",
-			Month:      "*",
-			WeekDay:    "*",
-		}
-	case Hourly:
-		// 0 * * * *
-		return &ItemTime{
-			Minute:     "0",
-			Hour:       "*",
-			DayOfMonth: "*",
-			Month:      "*",
-			WeekDay:    "*",
-		}
-	default:
-		return nil
-	}
+	return itemTime
 }
 
 /* parseTime
@@ -126,18 +129,20 @@ func parseMacro(macro string) *ItemTime {
 10 * 10 * *
 */
 func parseTime(timeString string) *ItemTime {
+	var itemTime *ItemTime
 	matches := TimePattern.FindStringSubmatch(timeString)
 	if matches == nil {
-		return nil
+		itemTime = nil
+	} else {
+		itemTime = &ItemTime{
+			Minute:     matches[1],
+			Hour:       matches[2],
+			DayOfMonth: matches[3],
+			Month:      matches[4],
+			WeekDay:    matches[5],
+		}
 	}
-	return &ItemTime{
-		Minute:     matches[1],
-		Hour:       matches[2],
-		DayOfMonth: matches[3],
-		Month:      matches[4],
-		WeekDay:    matches[5],
-	}
-
+	return itemTime
 }
 
 /* parseCommand

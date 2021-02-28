@@ -34,7 +34,7 @@ func (j *Job) RemoveItemsByComment(comment string) {
 }
 
 // Save - save cronjob to user's cron file
-func (j *Job) Save() {
+func (j *Job) Save() error {
 	tempfile, err := ioutil.TempFile("", "go-cron-*")
 	if err != nil {
 		panic(err)
@@ -73,7 +73,7 @@ func (j *Job) Save() {
 	tempfile.Sync()
 
 	cmd := exec.Command(CronCmd, tempfile.Name())
-	err = cmd.Run()
+	return cmd.Run()
 }
 
 func getStdOutErrFileNames(cmd *exec.Cmd) (string, string) {
